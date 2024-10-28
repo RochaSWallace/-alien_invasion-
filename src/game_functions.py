@@ -4,6 +4,24 @@ from ship import Ship
 from settings import Settings
 
 
+def check_keydown_events(event, ship:Ship):
+    """Responde a pressionamentos de tecla."""
+    if event.key == pygame.K_RIGHT:
+        ship.moving_right = True
+
+    elif event.key == pygame.K_LEFT:
+        ship.moving_left = True
+
+
+def check_keyup_events(event, ship:Ship):
+    """Responde a solturas de tecla."""
+    if event.key == pygame.K_RIGHT:
+        ship.moving_right = False
+
+    elif event.key == pygame.K_LEFT:
+        ship.moving_left = False
+
+
 def check_events(ship:Ship):
     """Responde a eventos de pressionamento de teclas e de mouse."""
     for event in pygame.event.get():
@@ -11,18 +29,10 @@ def check_events(ship:Ship):
             sys.exit()
 
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RIGHT:
-                ship.moving_right = True
-
-            elif event.key == pygame.K_LEFT:
-                ship.moving_left = True
+            check_keydown_events(event=event, ship=ship)
 
         elif event.type == pygame.KEYUP:
-            if event.key == pygame.K_RIGHT:
-                ship.moving_right = False
-
-            elif event.key == pygame.K_LEFT:
-                ship.moving_left = False
+            check_keyup_events(event=event, ship=ship)
 
 
 def update_screen(ai_settings:Settings, screen:pygame.surface.Surface, ship:Ship):
