@@ -6,4 +6,5 @@ readme = "README.md"
 requires-python = "==3.11.10"
 dependencies = [
     "pygame>=2.6.1",
+    "sprite>=0.1.0",
 ]
