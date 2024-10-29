@@ -19,7 +19,7 @@ def run_game():
 
         ship.update()
 
-        bullets.update()
+        gf.update_bullets(bullets=bullets)
 
         gf.update_screen(ai_settings=ai_settings, screen=screen, ship=ship, bullets=bullets)
 

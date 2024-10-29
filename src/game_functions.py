@@ -6,6 +6,13 @@ from settings import Settings
 from bullet import Bullet
 
 
+def fire_bullet(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet): 
+    """Dispara um projétil se o limite ainda não foi alcançado."""
+    if len(bullets) < ai_settings.bullets_allowed:
+        new_bullet = Bullet(ai_settings=ai_settings, screen=screen, ship=ship)
+        bullets.add(new_bullet)
+
+
 def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
     """Responde a pressionamentos de tecla."""
     if event.key == pygame.K_RIGHT:
@@ -13,10 +20,9 @@ def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship,
 
     elif event.key == pygame.K_LEFT:
         ship.moving_left = True
-    
+
     elif event.key == pygame.K_SPACE:
-        new_bullet = Bullet(ai_settings=ai_settings, screen=screen, ship=ship)
-        bullets.add(new_bullet)
+        fire_bullet(ai_settings, screen, ship, bullets)
 
 
 def check_keyup_events(event, ship:Ship):
@@ -50,4 +56,13 @@ def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bulle
 
     ship.blitme()
     pygame.display.flip()
+
+
+def update_bullets(bullets:Bullet):
+    """Atualiza a posição dos projéteis e se livra dos projéteis antigos."""
+    bullets.update()
+    for bullet in bullets.copy():
+        if bullet.rect.bottom <= 0:
+            bullets.remove(bullet)
+    
     
