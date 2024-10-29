@@ -4,6 +4,7 @@ from pygame.surface import Surface
 from ship import Ship
 from settings import Settings
 from bullet import Bullet
+from alien import Alien
 
 
 def fire_bullet(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet): 
@@ -23,6 +24,9 @@ def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship,
 
     elif event.key == pygame.K_SPACE:
         fire_bullet(ai_settings, screen, ship, bullets)
+
+    elif event.key == pygame.K_q:
+        sys.exit()
 
 
 def check_keyup_events(event, ship:Ship):
@@ -47,7 +51,7 @@ def check_events(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet
             check_keyup_events(event=event, ship=ship)
 
 
-def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
+def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet, alien:Alien):
     """Atualiza as imagens na tela e alterna para a nova tela."""
     screen.fill(ai_settings.bg_color)
 
@@ -55,6 +59,8 @@ def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bulle
         bullet.draw_bullet()
 
     ship.blitme()
+    alien.blitme()
+
     pygame.display.flip()
 
 
@@ -64,5 +70,3 @@ def update_bullets(bullets:Bullet):
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
-    
-    
