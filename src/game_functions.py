@@ -65,9 +65,19 @@ def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Group
     pygame.display.flip()
 
 
-def update_bullets(bullets:Bullet):
+def check_bullet_alien_collisions(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
+    """Responde a colisões entre projéteis e alienígenas."""
+    collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+    if len(aliens) == 0:
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
+
+
+def update_bullets(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
     """Atualiza a posição dos projéteis e se livra dos projéteis antigos."""
     bullets.update()
+    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
@@ -103,7 +113,6 @@ def change_fleet_direction(ai_settings:Settings, aliens:Group):
     """Faz toda a frota descer e muda a sua direção."""
     for alien in aliens.sprites():
         alien.rect.y += ai_settings.fleet_drop_speed
-        ai_settings.fleeet_direction *= -1
 
 
 def check_fleet_edges(ai_settings:Settings, aliens:Group):
@@ -111,13 +120,16 @@ def check_fleet_edges(ai_settings:Settings, aliens:Group):
     for alien in aliens.sprites():
         if alien.check_edges():
             change_fleet_direction(ai_settings, aliens)
+            ai_settings.fleet_direction *= -1
             break
 
 
-def update_aliens(ai_settings:Settings, aliens:Group):
+def update_aliens(ai_settings:Settings, ship:Ship, aliens:Group):
     """Atualiza as posições de todos os alienígenas da frota."""
     check_fleet_edges(ai_settings, aliens)
     aliens.update()
+    if pygame.sprite.spritecollideany(ship, aliens):
+        print("Ship hit!!!")
 
 
 def create_fleet(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group):
