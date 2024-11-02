@@ -111,6 +111,7 @@ def check_bullet_alien_collisions(ai_settings:Settings, screen:Surface, ship:Shi
     if collisions:
         for aliens in collisions.values():
             stats.score += ai_settings.alien_points * len(aliens)
+            check_high_score(stats, score)
             score.prep_score()
 
     if len(aliens) == 0:
@@ -214,3 +215,9 @@ def check_aliens_bottom(ai_settings:Settings, stats:GameStats, screen:Surface, s
             ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
             break
 
+
+def check_high_score(stats:GameStats, score:ScoreBoard):
+    """Verifica se há uma nova pontuação máxima."""
+    if stats.score > stats.high_score:
+        stats.high_score = stats.score
+        score.prep_high_score()

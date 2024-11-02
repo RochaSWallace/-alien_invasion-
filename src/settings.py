@@ -20,6 +20,7 @@ Alienígena.
         self.fleet_drop_speed = 5
         self.fleet_direction = 1
         self.speed_scale = 1.1
+        self.score_scale = 1.5
         self.initialize_dynamic_settings()
 
     def initialize_dynamic_settings(self):
@@ -34,3 +35,4 @@ Alienígena.
         self.ship_speed_factor *= self.speed_scale
         self.bullet_speed_factor *= self.speed_scale
         self.alien_speed_factor *= self.speed_scale
+        self.alien_points *= self.score_scale
