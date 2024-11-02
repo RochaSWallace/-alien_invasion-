@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 import pygame
 from pygame.surface import Surface
 from pygame.sprite import Group
@@ -6,6 +7,8 @@ from ship import Ship
 from settings import Settings
 from bullet import Bullet
 from alien import Alien
+from game_stats import GameStats
+from button import Button
 
 
 def fire_bullet(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
@@ -15,7 +18,18 @@ def fire_bullet(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet)
         bullets.add(new_bullet)
 
 
-def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
+def check_play_keydown(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Ship, aliens:Group, bullets:Group):
+    if not stats.game_active:
+        pygame.mouse.set_visible(False)
+        stats.reset_stats()
+        stats.game_active = True
+        aliens.empty()
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
+        ship.center_ship()
+
+
+def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet, stats:GameStats, aliens:Group):
     """Responde a pressionamentos de tecla."""
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
@@ -28,6 +42,9 @@ def check_keydown_events(event, ai_settings:Settings, screen:Surface, ship:Ship,
 
     elif event.key == pygame.K_q:
         sys.exit()
+    
+    elif event.key == pygame.K_p:
+        check_play_keydown(ai_settings, screen, stats, ship, aliens, bullets)
 
 
 def check_keyup_events(event, ship:Ship):
@@ -39,20 +56,38 @@ def check_keyup_events(event, ship:Ship):
         ship.moving_left = False
 
 
-def check_events(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
+def check_play_button(ai_settings:Settings, screen:Surface, stats:GameStats, play_button:Button, ship:Ship, aliens:Group, bullets:Group, mouse_x, mouse_y):
+    """Inicia um novo jogo quando o jogador clicar em Play."""
+    button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and not stats.game_active:
+        ai_settings.initialize_dynamic_settings()
+        pygame.mouse.set_visible(False)
+        stats.reset_stats()
+        stats.game_active = True
+        aliens.empty()
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
+        ship.center_ship()
+
+
+def check_events(ai_settings:Settings, screen:Surface, stats:GameStats, play_button:Button, ship:Ship, bullets:Bullet, aliens:Group):
     """Responde a eventos de pressionamento de teclas e de mouse."""
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
 
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event=event, ai_settings=ai_settings, screen=screen, ship=ship, bullets=bullets)
+            check_keydown_events(event=event, ai_settings=ai_settings, screen=screen, ship=ship, bullets=bullets, stats=stats, aliens=aliens)
 
         elif event.type == pygame.KEYUP:
             check_keyup_events(event=event, ship=ship)
 
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y)
 
-def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Group, aliens:Group):
+
+def update_screen(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Ship, bullets:Group, aliens:Group, play_button:Button):
     """Atualiza as imagens na tela e alterna para a nova tela."""
     screen.fill(ai_settings.bg_color)
 
@@ -62,6 +97,9 @@ def update_screen(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Group
     ship.blitme()
     aliens.draw(screen)
 
+    if not stats.game_active:
+        play_button.draw_button()
+
     pygame.display.flip()
 
 
@@ -70,6 +108,7 @@ def check_bullet_alien_collisions(ai_settings:Settings, screen:Surface, ship:Shi
     collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
     if len(aliens) == 0:
         bullets.empty()
+        ai_settings.increase_speed()
         create_fleet(ai_settings, screen, ship, aliens)
 
 
@@ -124,12 +163,14 @@ def check_fleet_edges(ai_settings:Settings, aliens:Group):
             break
 
 
-def update_aliens(ai_settings:Settings, ship:Ship, aliens:Group):
+def update_aliens(ai_settings:Settings, stats:GameStats, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
     """Atualiza as posições de todos os alienígenas da frota."""
     check_fleet_edges(ai_settings, aliens)
     aliens.update()
     if pygame.sprite.spritecollideany(ship, aliens):
-        print("Ship hit!!!")
+        ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+
+    check_aliens_bottom(ai_settings, stats, screen, ship, aliens, bullets)
 
 
 def create_fleet(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group):
@@ -141,3 +182,28 @@ def create_fleet(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group):
     for number_row in range(number_rows):
         for alien_number in range(number_aliens_x):
             create_alien(ai_settings, screen, aliens, alien_number, number_row)
+
+
+def ship_hit(ai_settings:Settings, stats:GameStats, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
+    """Responde ao fato de a espaçonave ter sido atingida por um alienígena."""
+    if stats.ships_left > 0:
+        stats.ships_left -= 1
+        aliens.empty()
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
+        sleep(0.5)
+
+    else:
+        stats.game_active = False
+        pygame.mouse.set_visible(True)
+
+
+def check_aliens_bottom(ai_settings:Settings, stats:GameStats, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
+    """Verifica se algum alienígena alcançou a parte inferior da tela."""
+    screen_rect = screen.get_rect()
+
+    for alien in aliens.sprites():
+        if alien.rect.bottom >= screen_rect.bottom:
+            ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+            break
+
