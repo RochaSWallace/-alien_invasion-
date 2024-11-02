@@ -9,6 +9,7 @@ from bullet import Bullet
 from alien import Alien
 from game_stats import GameStats
 from button import Button
+from score_board import ScoreBoard
 
 
 def fire_bullet(ai_settings:Settings, screen:Surface, ship:Ship, bullets:Bullet):
@@ -87,7 +88,7 @@ def check_events(ai_settings:Settings, screen:Surface, stats:GameStats, play_but
             check_play_button(ai_settings, screen, stats, play_button, ship, aliens, bullets, mouse_x, mouse_y)
 
 
-def update_screen(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Ship, bullets:Group, aliens:Group, play_button:Button):
+def update_screen(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Ship, bullets:Group, aliens:Group, play_button:Button, score:ScoreBoard):
     """Atualiza as imagens na tela e alterna para a nova tela."""
     screen.fill(ai_settings.bg_color)
 
@@ -96,6 +97,7 @@ def update_screen(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Sh
 
     ship.blitme()
     aliens.draw(screen)
+    score.show_score()
 
     if not stats.game_active:
         play_button.draw_button()
@@ -103,19 +105,24 @@ def update_screen(ai_settings:Settings, screen:Surface, stats:GameStats, ship:Sh
     pygame.display.flip()
 
 
-def check_bullet_alien_collisions(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
+def check_bullet_alien_collisions(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group, stats:GameStats,score:ScoreBoard):
     """Responde a colisões entre projéteis e alienígenas."""
     collisions = pygame.sprite.groupcollide(bullets, aliens, True, True)
+    if collisions:
+        for aliens in collisions.values():
+            stats.score += ai_settings.alien_points * len(aliens)
+            score.prep_score()
+
     if len(aliens) == 0:
         bullets.empty()
         ai_settings.increase_speed()
         create_fleet(ai_settings, screen, ship, aliens)
 
 
-def update_bullets(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group):
+def update_bullets(ai_settings:Settings, screen:Surface, ship:Ship, aliens:Group, bullets:Group, stats:GameStats, score:ScoreBoard):
     """Atualiza a posição dos projéteis e se livra dos projéteis antigos."""
     bullets.update()
-    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets, stats, score)
 
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
